@@ -1,5 +1,7 @@
 # Font Converter
 
+<img src="icons/icon.png" alt="App Icon" width="64" height="64">
+
 A simple Python app to convert font files between different formats like TTF, OTF, WOFF, WOFF2, and EOT. Built with PyQt6 for a user-friendly interface.
 
 ## About
