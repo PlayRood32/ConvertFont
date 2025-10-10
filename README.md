@@ -20,24 +20,25 @@ ConvertFont/
 │
 ├─ convert_font.py       # Main Python code
 ├─ requirements.txt      # Python dependencies
-├─ .venv/                # Virtual environment (contains all installed packages)
 ├─ icons/
 │   ├─ icon.ico          # App icon for EXE
 │   └─ icon.png          # PNG version of the icon
 ├─ README.md             # This file
+└─ .gitignore            # Ignore .venv and other unnecessary files
 ```
 
 ## Installation
 
-1. This project specifically uses Python 3.12.10. Make sure you have this version installed, or use the included `.venv` which already works with 3.12.10.
-2. Clone this repository:
+This project specifically uses Python 3.12.10. Make sure you have this version installed.
+
+Clone the repository:
 
 ```bash
 git clone https://github.com/PlayRood32/ConvertFont.git
 cd ConvertFont
 ```
 
-3. Create and activate a virtual environment (optional but recommended):
+Create and activate a virtual environment (optional but recommended):
 
 ```bash
 python -m venv .venv
@@ -47,7 +48,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-4. Install the required libraries:
+Install the required libraries:
 
 ```bash
 pip install -r requirements.txt
@@ -71,8 +72,6 @@ In the app:
 Check the status area for progress and results.
 
 ## Compiling to EXE with PyInstaller
-
-To create a standalone executable using PyInstaller (keeping all dependencies and using the app icon):
 
 1. Make sure PyInstaller is installed:
 
