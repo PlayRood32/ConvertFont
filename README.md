@@ -23,6 +23,9 @@ ConvertFont/
 ├─ icons/
 │   ├─ icon.ico          # App icon for EXE
 │   └─ icon.png          # PNG version of the icon
+├─ screenshots/          # Folder containing screenshots of the app
+│   ├─ main_window.png
+│   └─ conversion_result.png
 ├─ README.md             # This file
 └─ .gitignore            # Ignore .venv and other unnecessary files
 ```
@@ -70,6 +73,16 @@ In the app:
 4. Click "Start Conversion" to convert the files.
 
 Check the status area for progress and results.
+
+## Screenshots
+
+### Main Window
+
+![Main Window](screenshots/main_window.png)
+
+### Conversion Result
+
+![Conversion Result](screenshots/conversion_result.png)
 
 ## Compiling to EXE with PyInstaller
 
