@@ -9,6 +9,7 @@ from PyQt6.QtGui import QFont, QIcon
 from fontTools.ttLib import TTFont
 from fontTools.ttLib.woff2 import compress, decompress
 import shutil
+import struct
 
 # This class handles the font conversion process in a separate thread so the app doesn't freeze
 class FontConverter(QThread):
@@ -112,9 +113,9 @@ class FontConverter(QThread):
                 shutil.copy2(input_file, output_file)
                 return True
                 
-            # For non-OTF fonts, convert to TTF instead
+            # For non-OTF fonts, remove flavor and save as OTF
             font.flavor = None
-            font.save(output_file.replace('.otf', '.ttf'))
+            font.save(output_file)
             return True
         except Exception as e:
             print(f"Error converting to OTF: {str(e)}")
@@ -143,11 +144,95 @@ class FontConverter(QThread):
             return False
     
     def convert_to_eot(self, input_file, output_file):
-        # Convert a font to EOT format (simplified to TTF for now)
+        # Convert a font to EOT format
         try:
-            # EOT is a Microsoft format and requires external tools
-            # For simplicity, we convert to TTF instead
-            return self.convert_to_ttf(input_file, output_file.replace('.eot', '.ttf'))
+            # First, convert to a temporary TTF
+            file_name = os.path.splitext(os.path.basename(input_file))[0]
+            temp_ttf = os.path.join(self.output_dir, f"{file_name}_temp.ttf")
+            if not self.convert_to_ttf(input_file, temp_ttf):
+                return False
+            
+            # Load the font and read the TTF data
+            font = TTFont(temp_ttf)
+            with open(temp_ttf, 'rb') as f:
+                font_data = f.read()
+            
+            # Clean up the temp file
+            os.remove(temp_ttf)
+            
+            # Gather necessary data from font tables
+            head = font['head']
+            os2 = font['OS/2']
+            
+            # PANOSE bytes
+            panose = bytes([
+                os2.panose.bFamilyType, os2.panose.bSerifStyle, os2.panose.bWeight,
+                os2.panose.bProportion, os2.panose.bContrast, os2.panose.bStrokeVariation,
+                os2.panose.bArmStyle, os2.panose.bLetterform, os2.panose.bMidline,
+                os2.panose.bXHeight
+            ])
+            
+            # Italic flag
+            italic = 1 if (os2.fsSelection & 0x01) else 0
+            
+            # Function to get Unicode name strings in UTF-16 BE bytes
+            def get_unicode_name(nameID):
+                for rec in font['name'].names:
+                    if rec.nameID == nameID and rec.platformID == 3 and rec.platEncID == 1 and rec.langID == 0x409:
+                        return rec.string
+                return b''
+            
+            family_name = get_unicode_name(1)
+            style_name = get_unicode_name(2)
+            version_name = get_unicode_name(5)
+            full_name = get_unicode_name(4)
+            
+            family_size = len(family_name)
+            style_size = len(style_name)
+            version_size = len(version_name)
+            full_size = len(full_name)
+            
+            # Build the variable names part
+            names_data = b''
+            names_data += struct.pack('>HH', 0, family_size) + family_name
+            names_data += struct.pack('>HH', 0, style_size) + style_name
+            names_data += struct.pack('>HH', 0, version_size) + version_name
+            names_data += struct.pack('>HH', 0, full_size) + full_name
+            
+            # Calculate total EOT size (fixed header + names + font data)
+            fixed_header_size = 82  # Standard fixed part size before names
+            eot_size = fixed_header_size + len(names_data) + len(font_data)
+            
+            # Pack the fixed header
+            header = struct.pack(
+                '>III 10B B B I H H IIII II I IIII',
+                eot_size,                  # EOTSize
+                len(font_data),            # FontDataSize
+                0x00020001,                # Version (2.1)
+                0,                         # Flags (no compression)
+                *panose,                   # PANOSE[10]
+                0,                         # Charset (default)
+                italic,                    # Italic
+                os2.usWeightClass,         # Weight
+                os2.fsType,                # fsType
+                0x504C,                    # MagicNumber
+                os2.ulUnicodeRange1,       # UnicodeRange1
+                os2.ulUnicodeRange2,       # UnicodeRange2
+                os2.ulUnicodeRange3,       # UnicodeRange3
+                os2.ulUnicodeRange4,       # UnicodeRange4
+                os2.ulCodePageRange1,      # CodePageRange1
+                os2.ulCodePageRange2,      # CodePageRange2
+                head.checkSumAdjustment,   # CheckSumAdjustment
+                0, 0, 0, 0                 # Reserved1-4
+            )
+            
+            # Write to output file
+            with open(output_file, 'wb') as f:
+                f.write(header)
+                f.write(names_data)
+                f.write(font_data)
+            
+            return True
         except Exception as e:
             print(f"Error converting to EOT: {str(e)}")
             return False
