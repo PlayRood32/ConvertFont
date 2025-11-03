@@ -53,10 +53,17 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
+
+Upgrade pip (recommended):
+
+bash
+```
+python.exe -m pip install --upgrade pip
+```
+
 Install the required libraries:
 
 ```bash
-python.exe -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
