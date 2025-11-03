@@ -56,6 +56,7 @@ source .venv/bin/activate
 Install the required libraries:
 
 ```bash
+python.exe -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
