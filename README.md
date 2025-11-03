@@ -56,8 +56,7 @@ source .venv/bin/activate
 
 Upgrade pip (recommended):
 
-bash
-```
+```bash
 python.exe -m pip install --upgrade pip
 ```
 
